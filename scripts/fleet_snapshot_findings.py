@@ -164,8 +164,10 @@ def main(argv=None):
     rpm_all_day = int((per_dev.rpm_all == 1).sum())
     flagged_customer = an[an.org_group != "Test Group"].device_key.nunique()
     reporting_customer = int(len(rep))
-    chronic3 = int(((a3.days_present == 3) & (a3.rpm_na_pct >= 90)).sum())
-    transient3 = int((a3.rpm_na_pct < 20).sum())
+    a3c = a3[a3.org_group != "Test Group"]  # the internal test group is bench hardware with no engine attached
+    chronic3 = int(((a3c.days_present == 3) & (a3c.rpm_na_pct >= 90)).sum())
+    transient3 = int((a3c.rpm_na_pct < 20).sum())
+    chronic3_test = int(((a3.days_present == 3) & (a3.rpm_na_pct >= 90)).sum()) - chronic3
     moving_silent = an.vin_anomaly & an.speed_anomaly & an.rpm_anomaly & (an.gps_speed_kmh > 0)
     ms_share = moving_silent.groupby(an.org_group).mean()
     volvo = ms_share.get("Volvo 2026", float("nan"))
@@ -205,9 +207,9 @@ Computed from the public tables by `scripts/fleet_snapshot_findings.py`. "Custom
 
 - The anomaly rules flagged **{len(an):,} reports from {an.device_key.nunique():,} devices** on 2026-09-28 ({flagged_customer:,} customer devices, i.e. **{pct(flagged_customer / reporting_customer)} of reporting customer devices**).
 - The dominant pattern is **VIN + Speed + RPM missing together — {pct(triple_share)} of flagged reports — with a median GPS speed of {triple_moving_median:.0f} km/h**: the vehicle is moving but the ELD is not receiving engine data. For a regulated ELD this is a compliance exposure, not a cosmetic gap (figure 3).
-- **{rpm_all_day:,} devices had RPM missing on 100 % of their flagged reports** that day; across the 23–25 Sep window, **{chronic3} of 215 devices were present all three days with ≥ 90 % RPM missing (chronic)** versus **{transient3} with < 20 % (transient)**. Chronic devices are the field-service list; transient ones are mostly power-cycle or protocol hand-off noise.
+- **{rpm_all_day:,} devices had RPM missing on 100 % of their flagged reports** that day; across the 23–25 Sep window, **{chronic3} of {len(a3c)} customer devices were present all three days with ≥ 90 % RPM missing (chronic)** versus **{transient3} with < 20 % (transient)**. A further {chronic3_test} internal test-group units also meet the chronic rule, but they are bench hardware with no engine attached and are excluded here. Chronic devices are the field-service list; transient ones are mostly power-cycle or protocol hand-off noise.
 - The small **"Volvo 2026" group stands out: {pct(volvo, 0)} of its flagged reports are moving-while-silent across its {volvo_devices} devices, versus {pct(rt_lo, 0)}–{pct(rt_hi, 0)} for the regular RT63–RT67 batches** — consistent with an ECM protocol / wiring issue on the newest model-year trucks rather than random hardware failure.
-- These devices rarely surface through support: in the field-issue tracker covering Apr–Sep 2026, only 1 of the 29 chronic devices appears (and not for an OBD complaint). Proactive monitoring sees what the ticket queue does not.
+- These devices rarely surface through support: in the field-issue tracker covering Apr–Sep 2026, only 1 of the {chronic3} chronic customer devices appears (and not for an OBD complaint). Proactive monitoring sees what the ticket queue does not.
 
 ![anomaly combinations](figures/03_anomaly_combinations.png)
 

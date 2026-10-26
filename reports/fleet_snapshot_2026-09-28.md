@@ -17,9 +17,9 @@ Computed from the public tables by `scripts/fleet_snapshot_findings.py`. "Custom
 
 - The anomaly rules flagged **51,858 reports from 1,845 devices** on 2026-09-28 (1,803 customer devices, i.e. **52.2% of reporting customer devices**).
 - The dominant pattern is **VIN + Speed + RPM missing together — 46.9% of flagged reports — with a median GPS speed of 96 km/h**: the vehicle is moving but the ELD is not receiving engine data. For a regulated ELD this is a compliance exposure, not a cosmetic gap (figure 3).
-- **1,176 devices had RPM missing on 100 % of their flagged reports** that day; across the 23–25 Sep window, **29 of 215 devices were present all three days with ≥ 90 % RPM missing (chronic)** versus **49 with < 20 % (transient)**. Chronic devices are the field-service list; transient ones are mostly power-cycle or protocol hand-off noise.
+- **1,176 devices had RPM missing on 100 % of their flagged reports** that day; across the 23–25 Sep window, **14 of 182 customer devices were present all three days with ≥ 90 % RPM missing (chronic)** versus **40 with < 20 % (transient)**. A further 15 internal test-group units also meet the chronic rule, but they are bench hardware with no engine attached and are excluded here. Chronic devices are the field-service list; transient ones are mostly power-cycle or protocol hand-off noise.
 - The small **"Volvo 2026" group stands out: 98% of its flagged reports are moving-while-silent across its 15 devices, versus 33%–61% for the regular RT63–RT67 batches** — consistent with an ECM protocol / wiring issue on the newest model-year trucks rather than random hardware failure.
-- These devices rarely surface through support: in the field-issue tracker covering Apr–Sep 2026, only 1 of the 29 chronic devices appears (and not for an OBD complaint). Proactive monitoring sees what the ticket queue does not.
+- These devices rarely surface through support: in the field-issue tracker covering Apr–Sep 2026, only 1 of the 14 chronic customer devices appears (and not for an OBD complaint). Proactive monitoring sees what the ticket queue does not.
 
 ![anomaly combinations](figures/03_anomaly_combinations.png)
 

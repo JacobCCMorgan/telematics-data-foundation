@@ -20,9 +20,9 @@ Full report with figures: [`reports/fleet_snapshot_2026-09-28.md`](reports/fleet
 |---|---|
 | Connectivity | 29.5 % of registered units have never reported (inventory). Of 3,456 reporting customer devices, 61.4 % were online; the online rate climbs from **46 % on hardware generation A to 65 % on generation C**. |
 | Service queue | **12.6 % of reporting devices last reported in `LowBattery` mode**, 85 units are at ≤ 20 % backup battery, 500 have not updated in 30+ days — a concrete installer work-list rather than a dashboard tile. |
-| ECM connection | **40 % of reporting devices have never read a VIN from the ECM**. On the anomaly day, **47 % of flagged reports have VIN, speed and RPM missing simultaneously while the GPS says 96 km/h**: the truck is moving, the ELD hears nothing from the engine — a compliance exposure for a regulated device. 1,176 devices were silent on RPM for the whole day; in the 23–25 Sep window 29 devices were chronic (3/3 days, ≥ 90 % missing) versus 49 transient. |
+| ECM connection | **40 % of reporting devices have never read a VIN from the ECM**. On the anomaly day, **47 % of flagged reports have VIN, speed and RPM missing simultaneously while the GPS says 96 km/h**: the truck is moving, the ELD hears nothing from the engine — a compliance exposure for a regulated device. 1,176 devices were silent on RPM for the whole day; in the 23–25 Sep window 14 customer devices were chronic (3/3 days, ≥ 90 % missing) versus 40 transient; a further 15 "chronic" units are the provider's internal bench devices with no engine attached and are excluded from every customer figure. |
 | Batch signal | The newest **"Volvo 2026" batch has 98 % moving-while-silent reports versus 33–61 % for regular batches** — a protocol / wiring problem on new model-year trucks, not random hardware failure. |
-| Support blind spot | Only **1 of the 29 chronic devices ever appears in the field-issue tracker** (Apr–Sep 2026), and not for an engine-data complaint. Monitoring finds what the ticket queue does not. |
+| Support blind spot | Only **1 of the 14 chronic customer devices ever appears in the field-issue tracker** (Apr–Sep 2026), and not for an engine-data complaint. Monitoring finds what the ticket queue does not. |
 | Customer base | Owner-operator heavy: median organisation contracted **2 vehicles**, 90 % ≤ 5. 2,025 organisations active, 2,224 lapsed. |
 | Renewal cliff | **74 % of contract terms are exactly 365 days**; organisation tenure clusters at 365 / 730 / 1,095 days and **90 % of returned units came back before their first anniversary** — churn is a first-renewal event (figure below). |
 | Migration | Activations grew every year (222 in 2021 → 3,468 in Jan–Sep 2026) and **82 % of 2026 activations replaced an earlier device**, i.e. volume is dominated by the hardware-generation migration. |
@@ -130,7 +130,7 @@ python scripts/make_data_dictionary.py
 
 This repository is the shared foundation for the portfolio at [`fleet-data-lab`](https://github.com/JacobCCMorgan/fleet-data-lab):
 
-- `eld-ecm-disconnect` — chronic vs. transient ECM disconnects, day-4 persistence model, field-service prioritisation
+- [`eld-ecm-disconnect`](https://github.com/JacobCCMorgan/eld-ecm-disconnect) — chronic vs. transient ECM disconnects, day-4 recurrence, whether ranking needs a model (it does not), tiered field-service list
 - `eld-device-log-parser` — ELD firmware logs → structured events, MQTT latency, state-machine reconstruction
 - `eld-subscription-lifecycle` — organisation-level survival analysis, first-renewal churn, device-generation migration
 - `fmcsa-eld-logbook-toolkit` — FMCSA output-file parser / validator, eRODS reconciliation, HOS rule engine
