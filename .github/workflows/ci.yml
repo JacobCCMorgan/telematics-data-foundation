@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e ".[dev]"
+      - name: Unit and public-table tests
+        run: python -m pytest -q
+      - name: Rebuild warehouse and run example queries
+        run: |
+          python -m tdf.warehouse --data data/public --db data/warehouse.duckdb
+          python - <<'EOF'
+          import duckdb
+          con = duckdb.connect("data/warehouse.duckdb")
+          for stmt in open("sql/examples.sql").read().split(";"):
+              if "SELECT" in stmt:
+                  con.execute(stmt).fetchall()
+          print("example queries ok")
+          EOF
+      - name: Regenerate data-quality report (must match committed numbers)
+        run: |
+          python -m tdf.quality --data data/public --out /tmp/dq.md
+          python - <<'EOF'
+          import pandas as pd
+          a = pd.read_csv("reports/data_quality_report.csv")
+          b = pd.read_csv("/tmp/dq.csv")
+          pd.testing.assert_frame_equal(a[["table","check","numerator","denominator"]], b[["table","check","numerator","denominator"]])
+          print("data-quality report reproducible")
+          EOF
