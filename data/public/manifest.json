@@ -1,0 +1,270 @@
+{
+  "built_at_utc": "2026-10-26T15:53:43+00:00",
+  "snapshot_date": "2026-09-28",
+  "tables": {
+    "fact_contract": {
+      "rows": 13759,
+      "columns": [
+        "contract_row_id",
+        "org_key",
+        "is_internal_test",
+        "dot_key",
+        "vin_key",
+        "eld_type",
+        "device_key",
+        "prev_device_key",
+        "make",
+        "model_year",
+        "status",
+        "contract_date",
+        "activation_date",
+        "expiration_date",
+        "return_date",
+        "vehicle_limit",
+        "sales_rep_key"
+      ],
+      "file": "fact_contract.parquet"
+    },
+    "dim_org": {
+      "rows": 5675,
+      "columns": [
+        "org_key",
+        "is_internal_test",
+        "crm_active",
+        "state_raw",
+        "state",
+        "dot_key",
+        "has_dot",
+        "email_is_free_domain",
+        "crm_account_limit",
+        "crm_vehicle_limit",
+        "is_reseller",
+        "sales_rep_key",
+        "in_crm",
+        "app_fleet_vehicles",
+        "app_vehicle_limit",
+        "in_app",
+        "contract_rows",
+        "contract_rows_active",
+        "vehicles_ever",
+        "first_activation",
+        "last_expiration",
+        "org_lifecycle_status",
+        "tenure_days",
+        "in_contracts"
+      ],
+      "file": "dim_org.parquet"
+    },
+    "dim_device": {
+      "rows": 4970,
+      "columns": [
+        "device_key",
+        "org_group",
+        "is_internal_test",
+        "model_code",
+        "hw_version",
+        "fw_version",
+        "st_fw_version",
+        "ble_fw_version",
+        "vin_key",
+        "is_placeholder_vin",
+        "driver_key",
+        "has_trailer_gps",
+        "vehicle_make",
+        "vehicle_year",
+        "engine_hours",
+        "engine_miles",
+        "engine_km",
+        "device_temp_c",
+        "rpm",
+        "speed_kmh",
+        "gps_speed_kmh",
+        "lat_coarse",
+        "lon_coarse",
+        "timezone_offset",
+        "report_ts",
+        "backup_battery_pct",
+        "car_battery_connected",
+        "mode",
+        "disk_used_pct",
+        "mileage_source_sa",
+        "gps_valid",
+        "connect_status",
+        "connect_ts",
+        "remaining_data_mb",
+        "last_updated_ts",
+        "created_ts",
+        "updated_ts",
+        "last_event_type",
+        "never_reported"
+      ],
+      "file": "dim_device.parquet"
+    },
+    "dim_sim": {
+      "rows": 4970,
+      "columns": [
+        "device_key",
+        "org_group",
+        "sim_service_status",
+        "quota_status",
+        "remaining_data_mb",
+        "remaining_days",
+        "expiry_date",
+        "last_updated_ts"
+      ],
+      "file": "dim_sim.parquet"
+    },
+    "fact_sim_topup": {
+      "rows": 90,
+      "columns": [
+        "device_key",
+        "org_group",
+        "plan",
+        "operator_key",
+        "topup_ts",
+        "status"
+      ],
+      "file": "fact_sim_topup.parquet"
+    },
+    "fact_sim_usage": {
+      "rows": 20,
+      "columns": [
+        "device_key",
+        "org_group",
+        "usage_ts",
+        "used_mb",
+        "source",
+        "sync_ts"
+      ],
+      "file": "fact_sim_usage.parquet"
+    },
+    "fact_field_anomaly": {
+      "rows": 51858,
+      "columns": [
+        "report_date",
+        "report_ts",
+        "org_group",
+        "device_key",
+        "driver_key",
+        "vin_key",
+        "is_placeholder_vin",
+        "speed_kmh",
+        "rpm",
+        "engine_hours",
+        "engine_miles",
+        "car_battery_connected",
+        "gps_speed_kmh",
+        "lat_coarse",
+        "lon_coarse",
+        "vin_anomaly",
+        "speed_anomaly",
+        "rpm_anomaly",
+        "engine_hours_anomaly",
+        "engine_miles_anomaly"
+      ],
+      "file": "fact_field_anomaly.parquet"
+    },
+    "dim_vehicle": {
+      "rows": 3525,
+      "columns": [
+        "vin_key",
+        "is_placeholder_vin",
+        "org_key",
+        "is_internal_test",
+        "device_key",
+        "driver_assigned",
+        "make",
+        "model",
+        "model_year",
+        "fuel_type",
+        "state_raw",
+        "state",
+        "country_raw",
+        "country",
+        "terminal_timezone",
+        "odometer_adjustment",
+        "status",
+        "last_synced_ts"
+      ],
+      "file": "dim_vehicle.parquet"
+    },
+    "dim_driver_account": {
+      "rows": 4604,
+      "columns": [
+        "account_key",
+        "org_key",
+        "is_internal_test",
+        "license_state",
+        "license_shared_by_n_accounts",
+        "status",
+        "country_raw",
+        "last_synced_ts"
+      ],
+      "file": "dim_driver_account.parquet"
+    },
+    "fact_anomaly_device_3day": {
+      "rows": 215,
+      "columns": [
+        "device_key",
+        "org_group",
+        "days_present",
+        "n_records",
+        "vin_missing_n",
+        "vin_missing_pct",
+        "speed_na_n",
+        "speed_na_pct",
+        "rpm_na_n",
+        "rpm_na_pct",
+        "all_three_missing_n",
+        "d0923_n_records",
+        "d0923_vin_missing_n",
+        "d0923_speed_na_n",
+        "d0923_rpm_na_n",
+        "d0924_n_records",
+        "d0924_vin_missing_n",
+        "d0924_speed_na_n",
+        "d0924_rpm_na_n",
+        "d0925_n_records",
+        "d0925_vin_missing_n",
+        "d0925_speed_na_n",
+        "d0925_rpm_na_n",
+        "first_seen_ts",
+        "last_seen_ts",
+        "last_valid_vin_ts",
+        "last_valid_vin_key"
+      ],
+      "file": "fact_anomaly_device_3day.parquet"
+    },
+    "fact_anomaly_daily": {
+      "rows": 3,
+      "columns": [
+        "report_date",
+        "n_records",
+        "devices_affected",
+        "vin_missing_devices",
+        "vin_missing_n",
+        "speed_na_devices",
+        "speed_na_n",
+        "rpm_na_devices",
+        "rpm_na_n",
+        "all_three_missing_n"
+      ],
+      "file": "fact_anomaly_daily.parquet"
+    },
+    "fact_driving_day_sample": {
+      "rows": 30,
+      "columns": [
+        "report_date",
+        "driving_hours",
+        "daily_mileage",
+        "start_engine_miles",
+        "end_engine_miles",
+        "start_engine_km",
+        "end_engine_km",
+        "has_start_location",
+        "has_end_location"
+      ],
+      "file": "fact_driving_day_sample.parquet"
+    }
+  }
+}

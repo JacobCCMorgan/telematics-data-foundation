@@ -1,0 +1,21 @@
+# raw operational exports and keys never enter the repository
+data/raw/
+data/*.duckdb
+data/*.duckdb.wal
+secrets/
+*.key
+deid_key*
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# editors / os
+.DS_Store
+.vscode/
+.idea/
