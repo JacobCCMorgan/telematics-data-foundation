@@ -86,33 +86,47 @@ def fig_anomaly_combos(an: pd.DataFrame, out: Path):
     return counts, combo
 
 
-def fig_activations(con: pd.DataFrame, out: Path):
-    # 5 rows are dated after the snapshot (pre-registered activations); exclude them and the partial month
-    c = con[(con.activation_date >= "2021-01-01") & (con.activation_date <= SNAP)].copy()
-    c["month"] = c.activation_date.dt.to_period("M").dt.to_timestamp()
-    c["kind"] = np.where(c.prev_device_key.isna(), "first device on the row (organic)", "replacement (previous device recorded)")
-    m = c.groupby(["month", "kind"]).size().unstack(fill_value=0)
+def org_lifecycle_from_contracts(con: pd.DataFrame, org: pd.DataFrame) -> pd.DataFrame:
+    """Organisation start = earliest contract_date (the original sale), end = latest expiration capped at the snapshot.
+
+    `activation_date` is the start of the *current* term and is rolled forward by the CRM at every renewal,
+    so it cannot date the start of a relationship; `contract_date` can.
+    """
+    c = con[~con.is_internal_test].copy()
+    c["start"] = c.contract_date.fillna(c.activation_date)
+    g = c.groupby("org_key").agg(start=("start", "min"), end=("expiration_date", "max"))
+    g["end"] = g["end"].clip(upper=SNAP)
+    g["tenure_days"] = (g["end"] - g["start"]).dt.days
+    g = g.join(org.set_index("org_key")[["org_lifecycle_status", "is_internal_test"]], how="left")
+    g.loc[g.tenure_days < 0, "tenure_days"] = np.nan  # expiration before the first contract date: inconsistent rows
+    return g[g.start.notna()]
+
+
+def fig_new_customers(lifecycle: pd.DataFrame, out: Path):
+    # one point per organisation at its first contract date; the partial month is excluded
+    s = lifecycle[(lifecycle.start >= "2021-01-01") & (lifecycle.start < SNAP.to_period("M").to_timestamp())]
+    m = s.groupby(s.start.dt.to_period("M").dt.to_timestamp()).size()
     fig, ax = plt.subplots(figsize=(7, 3.4))
-    ax.stackplot(m.index, [m.iloc[:, 0], m.iloc[:, 1]], labels=list(m.columns), colors=[C1, C2], alpha=0.9)
-    ax.set_title("Device activations per month, 2021-01 to 2026-09 (Sep. partial, to the 28th)")
-    ax.set_ylabel("contract rows activated")
-    ax.legend(loc="upper left", frameon=False, fontsize=8)
+    ax.plot(m.index, m.values, color=C1)
+    ax.set_title("New customer organisations per month (first contract date), 2021-01 to 2026-08")
+    ax.set_ylabel("organisations")
+    ax.set_ylim(0, None)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out / "04_activations_per_month.png", dpi=160)
+    fig.savefig(out / "04_new_customers_per_month.png", dpi=160)
     plt.close(fig)
     return m
 
 
-def fig_tenure(org: pd.DataFrame, out: Path):
-    o = org[~org.is_internal_test & org.tenure_days.notna() & (org.tenure_days >= 0)]
+def fig_tenure(lifecycle: pd.DataFrame, out: Path):
+    o = lifecycle[lifecycle.tenure_days.notna()]
     fig, ax = plt.subplots(figsize=(6.4, 3.4))
-    bins = np.arange(0, 1500, 30)
+    bins = np.arange(0, 2200, 30)
     ax.hist(o.loc[o.org_lifecycle_status == "lapsed", "tenure_days"], bins=bins, color=C2, alpha=0.85, label="lapsed (all contracts expired)")
     ax.hist(o.loc[o.org_lifecycle_status == "active", "tenure_days"], bins=bins, color=C1, alpha=0.7, label="active")
-    for d in (365, 730, 1095):
+    for d in (365, 730, 1095, 1460):
         ax.axvline(d, color=C4, lw=0.8, ls="--")
-    ax.set_xlabel("organisation tenure in days (first activation to last expiration, capped at the snapshot)")
+    ax.set_xlabel("organisation tenure in days (first contract date to last expiration, capped at the snapshot)")
     ax.set_ylabel("organisations")
     ax.set_title("Tenure clusters at the one-year renewal points")
     ax.legend(frameon=False, fontsize=9)
@@ -144,8 +158,9 @@ def main(argv=None):
     g_hw = fig_online_by_hw(dev, figs)
     modes = fig_mode_mix(dev, figs)
     combos, combo = fig_anomaly_combos(an, figs)
-    act = fig_activations(con, figs)
-    ten = fig_tenure(org, figs)
+    life = org_lifecycle_from_contracts(con, org)
+    fig_new_customers(life, figs)
+    fig_tenure(life, figs)
 
     online = (rep.connect_status == "Online").mean()
     lowbatt = (rep["mode"] == "LowBattery").mean()
@@ -177,15 +192,15 @@ def main(argv=None):
     # customers
     o = org[~org.is_internal_test]
     status = o.org_lifecycle_status.value_counts()
-    q = o.tenure_days.dropna().quantile([0.1, 0.25, 0.5, 0.75, 0.9]).round(0).astype(int)
+    q = life.tenure_days.dropna().quantile([0.1, 0.25, 0.5, 0.75, 0.9]).round(0).astype(int)
     fleet = o.vehicles_ever.dropna()
     term = (con.expiration_date - con.activation_date).dt.days
     one_year = (term == 365).sum() / term.notna().sum()
-    returns = con[con.return_date.notna() & con.activation_date.notna()]
-    life = (returns.return_date - returns.activation_date).dt.days
-    life = life[life >= 0]  # 25 rows have a return date before activation (see data-quality report)
-    act_year = con.activation_date.dt.year.value_counts().sort_index()
-    repl_share_2026 = (con[(con.activation_date.dt.year == 2026)].prev_device_key.notna()).mean()
+    gap = (con.activation_date - con.contract_date).dt.days.dropna()
+    rolled = ((gap - (gap / 365).round() * 365).abs() <= 7).mean()
+    renewed_rows = (gap >= 300).mean()
+    new_year = life.start.dt.year.value_counts().sort_index()
+    repl_rows_2026 = con[(con.activation_date.dt.year == 2026) & ~con.is_internal_test].prev_device_key.notna().mean()
     make = veh.make.value_counts(normalize=True)
 
     md = f"""# Fleet snapshot findings — 2026-09-28
@@ -217,12 +232,12 @@ Computed from the public tables by `scripts/fleet_snapshot_findings.py`. "Custom
 
 - **{len(o):,} organisations** appear across the CRM, the app master and the contract history. Lifecycle at the snapshot: **{status.get('active', 0):,} active**, **{status.get('lapsed', 0):,} lapsed** (every contract expired, none active), {status.get('inactive_not_expired', 0):,} inactive but not yet expired, {status.get('no_dates', 0):,} without usable dates.
 - The business is **owner-operator heavy**: median fleet ever contracted is **{fleet.median():.0f} vehicle(s)**, 90 % of organisations have **≤ {fleet.quantile(0.9):.0f}** and 99 % **≤ {fleet.quantile(0.99):.0f}**.
-- Contracts are one-year terms: **{pct(one_year)} of activation→expiration spans are exactly 365 days**, and organisation tenure clusters at the renewal points — 10/25/50/75/90th percentiles of **{q[0.1]}/{q[0.25]}/{q[0.5]}/{q[0.75]}/{q[0.9]} days** (figure 5). The first renewal is the decisive churn moment.
-- Among the {len(life):,} units with a return date, the median lifetime was **{life.median():.0f} days** after activation and **{pct((life < 365).mean())} were returned before the first anniversary** — churn is overwhelmingly a first-year event.
-- Activations grew every year — {', '.join(f'{int(y)}: {int(n):,}' for y, n in act_year.items() if y >= 2021)} (2026 through September) — and in 2026 **{pct(repl_share_2026)} of activations carried a previous device**, i.e. the hardware-generation migration is a large share of volume (figure 4).
+- Contracts are one-year terms: **{pct(one_year)} of activation→expiration spans are exactly 365 days**. `activation_date` is the start of the *current* term, not the day the device went live — the CRM rolls it forward at every renewal ({pct(rolled)} of the activation−contract gaps are whole multiples of 365 days and {pct(renewed_rows)} of rows have been renewed at least once). Time since the sale has to be measured from `contract_date`.
+- Measured that way, organisation tenure (first contract date to last expiration, capped at the snapshot) has 10/25/50/75/90th percentiles of **{q[0.1]}/{q[0.25]}/{q[0.5]}/{q[0.75]}/{q[0.9]} days** and clusters at the anniversaries (figure 5). Which anniversary customers leave at, and how the hazard has moved over time, is the subject of the `eld-subscription-lifecycle` repository.
+- New customer organisations per year (first contract date): {', '.join(f'{int(y)}: {int(n):,}' for y, n in new_year.items() if y >= 2021)} (2026 through August; the earlier years are thinned because the CRM purges rows of customers who left — quantified in `eld-subscription-lifecycle`). Counting `activation_date` instead would show 3,468 "activations" in 2026, most of them renewals of older customers; {pct(repl_rows_2026)} of the rows whose current term started in 2026 carry a previous device, which is the hardware-generation migration, not new business.
 - Vehicles are heavy-duty tractors: **{pct(make.get('Freightliner', 0))} Freightliner, {pct(make.get('Volvo', 0))} Volvo**, median model year {veh.model_year.median():.0f}, **{pct((veh.state == 'CA').mean())} registered in California**.
 
-![activations](figures/04_activations_per_month.png)
+![new customers](figures/04_new_customers_per_month.png)
 ![tenure](figures/05_org_tenure.png)
 
 ## 4. What this snapshot cannot tell you

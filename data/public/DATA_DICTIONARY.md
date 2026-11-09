@@ -133,10 +133,10 @@ Grain: org_key. Rows: 5,675.
 | `contract_rows` | float64 | 94% | Number of contract rows for the organisation. |
 | `contract_rows_active` | float64 | 94% | Contract rows with status 'active'. |
 | `vehicles_ever` | float64 | 94% | Distinct VINs ever contracted by the organisation. |
-| `first_activation` | datetime64[ns] | 85% | Earliest activation date across the organisation's contract rows. |
+| `first_activation` | datetime64[ns] | 85% | Earliest activation_date across the organisation's contract rows. activation_date is the start of the current term (rolled forward at renewal), so this is not the start of the relationship; use the earliest contract_date for that. |
 | `last_expiration` | datetime64[ns] | 81% | Latest expiration date across the organisation's contract rows. |
 | `org_lifecycle_status` | object | 94% | active (≥1 active row) / lapsed (all expired, none active) / inactive_not_expired / no_dates, as of 2026-09-28. |
-| `tenure_days` | float64 | 81% | last_expiration (capped at 2026-09-28) minus first_activation. |
+| `tenure_days` | float64 | 81% | last_expiration (capped at 2026-09-28) minus first_activation; understates tenure for renewed customers for the reason given under first_activation. |
 | `in_contracts` | bool | 100% | Organisation present in the contract history. |
 
 ## `fact_contract`
@@ -157,8 +157,8 @@ Grain: contract_row_id. Rows: 13,759.
 | `make` | object | 81% | Vehicle make. |
 | `model_year` | float64 | 99% | Vehicle model year. |
 | `status` | object | 98% | Status field of the source row (meaning depends on table: contract status, vehicle status, account status, top-up status). |
-| `contract_date` | datetime64[ns] | 82% | Contract date. |
-| `activation_date` | datetime64[ns] | 84% | Device activation date. |
+| `contract_date` | datetime64[ns] | 82% | Date the vehicle slot was first sold; inherited by a replacement device. |
+| `activation_date` | datetime64[ns] | 84% | Start of the current one-year term. The CRM rolls it forward at each renewal, so it is not the date the device went live. |
 | `expiration_date` | datetime64[ns] | 78% | Contract expiration date. |
 | `return_date` | datetime64[ns] | 30% | Device return date, when returned. |
 | `vehicle_limit` | float64 | 100% | Vehicle limit on the contract row. |

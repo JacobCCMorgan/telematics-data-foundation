@@ -27,12 +27,12 @@ Computed from the public tables by `scripts/fleet_snapshot_findings.py`. "Custom
 
 - **5,667 organisations** appear across the CRM, the app master and the contract history. Lifecycle at the snapshot: **2,025 active**, **2,224 lapsed** (every contract expired, none active), 359 inactive but not yet expired, 700 without usable dates.
 - The business is **owner-operator heavy**: median fleet ever contracted is **2 vehicle(s)**, 90 % of organisations have **≤ 5** and 99 % **≤ 14**.
-- Contracts are one-year terms: **74.1% of activation→expiration spans are exactly 365 days**, and organisation tenure clusters at the renewal points — 10/25/50/75/90th percentiles of **123/300/365/730/1180 days** (figure 5). The first renewal is the decisive churn moment.
-- Among the 3,808 units with a return date, the median lifetime was **266 days** after activation and **89.9% were returned before the first anniversary** — churn is overwhelmingly a first-year event.
-- Activations grew every year — 2021: 222, 2022: 1,474, 2023: 1,587, 2024: 2,356, 2025: 2,516, 2026: 3,468 (2026 through September) — and in 2026 **82.4% of activations carried a previous device**, i.e. the hardware-generation migration is a large share of volume (figure 4).
+- Contracts are one-year terms: **74.1% of activation→expiration spans are exactly 365 days**. `activation_date` is the start of the *current* term, not the day the device went live — the CRM rolls it forward at every renewal (92.6% of the activation−contract gaps are whole multiples of 365 days and 68.7% of rows have been renewed at least once). Time since the sale has to be measured from `contract_date`.
+- Measured that way, organisation tenure (first contract date to last expiration, capped at the snapshot) has 10/25/50/75/90th percentiles of **365/714/1095/1594/2023 days** and clusters at the anniversaries (figure 5). Which anniversary customers leave at, and how the hazard has moved over time, is the subject of the `eld-subscription-lifecycle` repository.
+- New customer organisations per year (first contract date): 2021: 1,078, 2022: 822, 2023: 763, 2024: 672, 2025: 448, 2026: 294 (2026 through August; the earlier years are thinned because the CRM purges rows of customers who left — quantified in `eld-subscription-lifecycle`). Counting `activation_date` instead would show 3,468 "activations" in 2026, most of them renewals of older customers; 82.4% of the rows whose current term started in 2026 carry a previous device, which is the hardware-generation migration, not new business.
 - Vehicles are heavy-duty tractors: **66.8% Freightliner, 25.1% Volvo**, median model year 2020, **81.6% registered in California**.
 
-![activations](figures/04_activations_per_month.png)
+![new customers](figures/04_new_customers_per_month.png)
 ![tenure](figures/05_org_tenure.png)
 
 ## 4. What this snapshot cannot tell you

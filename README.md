@@ -24,8 +24,8 @@ Full report with figures: [`reports/fleet_snapshot_2026-09-28.md`](reports/fleet
 | Batch signal | The newest **"Volvo 2026" batch has 98 % moving-while-silent reports versus 33–61 % for regular batches** — a protocol / wiring problem on new model-year trucks, not random hardware failure. |
 | Support blind spot | Only **1 of the 14 chronic customer devices ever appears in the field-issue tracker** (Apr–Sep 2026), and not for an engine-data complaint. Monitoring finds what the ticket queue does not. |
 | Customer base | Owner-operator heavy: median organisation contracted **2 vehicles**, 90 % ≤ 5. 2,025 organisations active, 2,224 lapsed. |
-| Renewal cliff | **74 % of contract terms are exactly 365 days**; organisation tenure clusters at 365 / 730 / 1,095 days and **90 % of returned units came back before their first anniversary** — churn is a first-renewal event (figure below). |
-| Migration | Activations grew every year (222 in 2021 → 3,468 in Jan–Sep 2026) and **82 % of 2026 activations replaced an earlier device**, i.e. volume is dominated by the hardware-generation migration. |
+| Term dates | **74 % of contract terms are exactly 365 days**, and `activation_date` is the start of the *current* term — the CRM rolls it forward at each renewal (93 % of activation−contract gaps are whole years), so it must not be read as the day the device went live. Tenure measured from `contract_date` clusters at the anniversaries (figure below); the renewal hazard itself is analysed in [`eld-subscription-lifecycle`](https://github.com/JacobCCMorgan/eld-subscription-lifecycle). |
+| Migration | 82 % of the rows whose current term started in 2026 carry a previous device: the hardware-generation migration dominates the renewal workload. New customer organisations run at a few hundred a year, not the thousands a naive count of `activation_date` suggests. |
 
 ![tenure](reports/figures/05_org_tenure.png)
 ![anomaly combinations](reports/figures/03_anomaly_combinations.png)
